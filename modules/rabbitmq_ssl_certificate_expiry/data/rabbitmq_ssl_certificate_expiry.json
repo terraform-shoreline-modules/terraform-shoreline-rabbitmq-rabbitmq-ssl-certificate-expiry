@@ -1,0 +1,134 @@
+{
+  "name": "rabbitmq_ssl_certificate_expiry",
+  "description": "This incident type refers to situations where the SSL (Secure Sockets Layer) certificate used by RabbitMQ, a popular open-source message broker software, has expired. This can lead to issues with secure communications and potentially cause disruptions in the messaging system's functionality. It is important to promptly renew the SSL certificate to avoid any negative impact on system performance and security.",
+  "params": [
+    {
+      "name": "RABBITMQ_CONFIG_FILE",
+      "value": ""
+    },
+    {
+      "name": "PATH_TO_CA_CERTIFICATES",
+      "value": ""
+    },
+    {
+      "name": "PATH_TO_CERTIFICATE_FILE",
+      "value": ""
+    },
+    {
+      "name": "NEW_CERTIFICATE_NAME",
+      "value": ""
+    },
+    {
+      "name": "NEW_CERTIFICATE_EXPIRY",
+      "value": ""
+    },
+    {
+      "name": "RABBITMQ_HOST",
+      "value": ""
+    },
+    {
+      "name": "HOST_NAME",
+      "value": ""
+    },
+    {
+      "name": "K8S_CLUSTER_NAME",
+      "value": ""
+    },
+    {
+      "name": "NAMESPACE",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "name": "cell_1",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## RabbitMQ SSL Certificate Expiry\nThis incident type refers to situations where the SSL (Secure Sockets Layer) certificate used by RabbitMQ, a popular open-source message broker software, has expired. This can lead to issues with secure communications and potentially cause disruptions in the messaging system's functionality. It is important to promptly renew the SSL certificate to avoid any negative impact on system performance and security."
+    },
+    {
+      "name": "cell_2",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check for RabbitMQ SSL certificate expiration date"
+    },
+    {
+      "name": "cell_3",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `openssl x509 -enddate -noout -in ${PATH_TO_CERTIFICATE_FILE}`"
+    },
+    {
+      "name": "cell_4",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check RabbitMQ logs for SSL related issues"
+    },
+    {
+      "name": "cell_5",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `journalctl -u rabbitmq-server | grep SSL`"
+    },
+    {
+      "name": "cell_6",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Verify RabbitMQ SSL configuration"
+    },
+    {
+      "name": "cell_7",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_ssl_info()"
+    },
+    {
+      "name": "cell_8",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check RabbitMQ SSL port status"
+    },
+    {
+      "name": "cell_9",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `ss -tulwn | grep 5671`"
+    },
+    {
+      "name": "cell_10",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Verify SSL certificate chain"
+    },
+    {
+      "name": "cell_11",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `openssl verify -verbose -CAfile ${PATH_TO_CA_CERTIFICATES} ${PATH_TO_CERTIFICATE_FILE}`"
+    },
+    {
+      "name": "cell_12",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Verify SSL connection to RabbitMQ server"
+    },
+    {
+      "name": "cell_13",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `openssl s_client -connect ${RABBITMQ_HOST}:5671`"
+    },
+    {
+      "name": "cell_14",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Generate a new SSL certificate with a valid expiration date and update it in the RabbitMQ configuration."
+    },
+    {
+      "name": "cell_15",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_generate_ssl_cert($RABBITMQ_CONFIG_FILE, $NEW_CERTIFICATE_NAME, $NEW_CERTIFICATE_EXPIRY)"
+    }
+  ]
+}
